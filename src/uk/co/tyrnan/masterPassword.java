@@ -5,30 +5,31 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 import java.util.Objects;
 import java.util.Scanner;
 
 public class masterPassword {
+    private static String hash(String input) throws NoSuchAlgorithmException {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        byte[] inputEncoded = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+        return Base64.getEncoder().encodeToString(inputEncoded);
+    }
+
     public static boolean passwordChecker() {
         Scanner sc = new Scanner(System.in);
-
-        System.out.println("loading");
 
         try {
             File masterPasswordStore = new File("master-password.txt");
             if (masterPasswordStore.createNewFile()) {
-                System.out.println("No Master Password file found.");
-                System.out.println("Creating new Master Password file");
-                System.out.print("Please input new Master Password: ");
+                System.out.println("No Master Password file found.\nPlease input new Master Password: ");
 
-                String input = sc.next();
+                String input = sc.nextLine();
 
-                FileWriter fileWriter = new FileWriter("master-password.txt");
-                fileWriter.write(input);
-                fileWriter.close();
+                Main.filewriter(input, "master-password.txt");
                 System.out.println("Successfully created new Master Password.");
-
-                System.out.println("Deleting all files.");
 
                 // Delete all files
 
@@ -39,22 +40,18 @@ public class masterPassword {
                 String masterPassword = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
 
                 if (masterPassword.equals("") || masterPassword.equals(" ")) {
-                    System.out.println("Master Password file exists but there is no data");
-                    System.out.println("Please input new Master Password");
-                    String newMasterPassword = sc.next();
+                    System.out.println("Master Password file exists but there is no data.\nPlease input new Master Password: ");
+                    String newMasterPassword = sc.nextLine();
 
-                    FileWriter fileWriter = new FileWriter("master-password.txt");
-                    fileWriter.write(newMasterPassword);
-                    fileWriter.close();
-                    System.out.println("Successfully created new Master Password.");
+                    Main.filewriter(newMasterPassword, "master-password.txt");
 
                 } else {
                     System.out.print("Input Master Password: ");
                     for (int i = 0; i < 4; i++) {
 
-                        String input = sc.next();
+                        String input = sc.nextLine();
 
-                        if (Objects.equals(input, masterPassword)) {
+                        if (Objects.equals(hash(input), masterPassword)) {
                             return true;
                         }
                         System.out.print("Input Master Password you have " + (3 - i) + " attempts left: ");
@@ -65,6 +62,8 @@ public class masterPassword {
             }
         } catch (IOException e) {
             System.out.println("An error occurred.");
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
 
