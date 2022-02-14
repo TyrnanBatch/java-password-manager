@@ -2,22 +2,13 @@ package uk.co.tyrnan;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
 import java.util.Objects;
 import java.util.Scanner;
 
 public class masterPassword {
-    private static String hash(String input) throws NoSuchAlgorithmException {
-        MessageDigest digest = MessageDigest.getInstance("SHA-256");
-        byte[] inputEncoded = digest.digest(input.getBytes(StandardCharsets.UTF_8));
-        return Base64.getEncoder().encodeToString(inputEncoded);
-    }
-
     public static boolean passwordChecker() {
         Scanner sc = new Scanner(System.in);
 
@@ -51,7 +42,7 @@ public class masterPassword {
 
                         String input = sc.nextLine();
 
-                        if (Objects.equals(hash(input), masterPassword)) {
+                        if (Objects.equals(hashing.hash(input), masterPassword)) {
                             return true;
                         }
                         System.out.print("Input Master Password you have " + (3 - i) + " attempts left: ");
