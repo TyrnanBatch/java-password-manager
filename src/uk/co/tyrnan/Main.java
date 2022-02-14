@@ -14,7 +14,7 @@ public class Main {
         fileWriter.close();
     }
 
-    public static void main(String[] args) throws NoSuchAlgorithmException {
+    public static void main(String[] args) throws Exception {
 
         Scanner sc = new Scanner(System.in);
 
@@ -33,8 +33,7 @@ public class Main {
             String[] sec = command.split(" ");
 
             if (Objects.equals(sec[0], "add")) {
-                createPassword cp = new createPassword(sec);
-                cp.createpassword();
+                createPassword.createpassword();
             }
         }
     }
