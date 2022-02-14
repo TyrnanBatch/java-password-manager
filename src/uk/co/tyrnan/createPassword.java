@@ -1,71 +1,39 @@
 package uk.co.tyrnan;
 
-import javax.crypto.Cipher;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.util.Base64;
+import java.security.NoSuchAlgorithmException;
 import java.util.Scanner;
 import java.util.stream.Stream;
 
 public class createPassword {
     private final String[] sec;
 
-    private PrivateKey privateKey;
-    private PublicKey publicKey;
-
     public createPassword(String[] sec) {
         this.sec = sec;
-
-        try {
-            KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
-            generator.initialize(1024);
-            KeyPair pair = generator.generateKeyPair();
-            privateKey = pair.getPrivate();
-            publicKey = pair.getPublic();
-        } catch (Exception ignored) {
-        }
     }
 
-    public String encrypt(String message) throws Exception {
-        byte[] messageToBytes = message.getBytes();
-        Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-        cipher.init(Cipher.ENCRYPT_MODE, publicKey);
-        byte[] encryptedBytes = cipher.doFinal(messageToBytes);
-        return Base64.getEncoder().encodeToString(encryptedBytes);
-    }
-
-    public String decrypt(String encryptedMessage) throws Exception {
-        byte[] encryptedBytes = Base64.getDecoder().decode(encryptedMessage);
-        Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-        cipher.init(Cipher.DECRYPT_MODE, privateKey);
-        byte[] decryptedMessage = cipher.doFinal(encryptedBytes);
-        return new String(decryptedMessage, StandardCharsets.UTF_8);
-    }
-
-    public static boolean passwordNameCheck(String input) throws IOException {
+    private boolean passwordNameCheck(String input) throws IOException {
         for (int i = 0; i < 15; i++) {
             try (Stream<String> all_lines = Files.lines(Paths.get("password-store.txt"))) {
                 String lineCheck = all_lines.skip(i).findFirst().get();
-                String[] passwordName = lineCheck.split(":");
+                String[] rawName = lineCheck.split(":");
 
-                if (passwordName[0].equals(input.split(":")[0])) {
-                    System.out.println("You already have a password saved under that name.");
+                if (lineCheck.split(":")[0].equals(hashing.hash(rawName[0]))) {
                     return false;
                 }
+            } catch (NoSuchAlgorithmException e) {
+                e.printStackTrace();
             }
         }
+        return true;
     }
 
-    public void createpassword() throws IOException {
+    public static void createpassword() throws Exception {
 
         Scanner sc = new Scanner(System.in);
 
@@ -73,8 +41,6 @@ public class createPassword {
         if (passwordStore.createNewFile()) {
             System.out.println("");
         }
-
-        String password = this.sec[1];
 
         int lines = 0;
 
@@ -86,9 +52,23 @@ public class createPassword {
         }
 
         if (passwordNameCheck(input)) {
-            // tbc
-        }
+            String[] commandSplit = this.sec[1].split(":");
+            String name = commandSplit[0];
+            String password = commandSplit[1];
 
+            String hashedName = hashing.hash(name);
+            String encryptedPassword = encrypting.encrypt(password);
+
+            Main.filewriter(hashedName + ":" + encryptedPassword, "password-store.txt");
+
+            System.out.println("Password added");
+        } else {
+            System.out.println("Already a password saved under this name.");
+            String editCheck = ("\nEdit it (Y/N): ");
+            if (editCheck.equalsIgnoreCase("y")) {
+                // TODO edit function
+            }
+        }
     }
 }
 
